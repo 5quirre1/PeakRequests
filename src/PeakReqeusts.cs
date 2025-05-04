@@ -36,10 +36,11 @@
  *   
  */
 
-
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace PeakRequests
 {
@@ -79,6 +80,21 @@ namespace PeakRequests
                 }
             }
         }
+
+        public JsonNode? Json()
+        {
+            if (string.IsNullOrEmpty(Content))
+                return null;
+
+            try
+            {
+                return JsonNode.Parse(Content);
+            }
+            catch (JsonException ex)
+            {
+                throw new JsonException($"failed to parse json: {ex.Message}", ex);
+            }
+        }
     }
 
     public static class PeakRequests
@@ -110,6 +126,21 @@ namespace PeakRequests
         );
 
         private static HttpClient Client => _client.Value;
+
+        public static JsonNode? ParseJson(string json)
+        {
+            if (string.IsNullOrEmpty(json))
+                return null;
+
+            try
+            {
+                return JsonNode.Parse(json);
+            }
+            catch (JsonException ex)
+            {
+                throw new JsonException($"failed to parse json: {ex.Message}", ex);
+            }
+        }
 
         private static HttpRequestMessage CreateRequest(
             HttpMethod method,
@@ -333,7 +364,7 @@ namespace PeakRequests
                     httpMethod = HttpMethod.Delete;
                     break;
                 case "PATCH":
-                    httpMethod = new HttpMethod("PATCH");
+                    httpMethod = HttpMethod.Patch;
                     break;
                 default:
                     throw new ArgumentException($"unsupported http method: {method}");
@@ -360,4 +391,3 @@ namespace PeakRequests
         }
     }
 }
-
